@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,22 +21,18 @@ import java.util.List;
 public class IncidentServiceImpl implements IncidentService {
 
     private final IncidentRepository incidentRepository;
+    private final IncidentMapper incidentMapper;
 
     @Override
     public IncidentResponse createIncident(CreateIncidentRequest request) {
 
-        Incident incident = new Incident();
+        Incident incident = incidentMapper.toEntity(request);
 
-        incident.setTitle(request.getTitle());
-        incident.setDescription(request.getDescription());
-        incident.setSeverity(request.getSeverity());
         incident.setStatus(Status.OPEN);
-        incident.setCreatedAt(LocalDateTime.now());
-        incident.setUpdatedAt(LocalDateTime.now());
 
-        Incident savedIncident = incidentRepository.save(incident);
+        Incident saved = incidentRepository.save(incident);
 
-        return IncidentMapper.toResponse(savedIncident);
+        return incidentMapper.toResponse(saved);
     }
 
     @Override
@@ -45,23 +41,23 @@ public class IncidentServiceImpl implements IncidentService {
 
         return incidentRepository.findAll()
                 .stream()
-                .map(IncidentMapper::toResponse)
+                .map(incidentMapper::toResponse)
                 .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public IncidentResponse getIncident(java.util.UUID id) {
+    public IncidentResponse getIncident(UUID id) {
 
         Incident incident = incidentRepository.findById(id)
                 .orElseThrow(() -> new IncidentNotFoundException(
                         "Incident not found with id : " + id));
 
-        return IncidentMapper.toResponse(incident);
+        return incidentMapper.toResponse(incident);
     }
 
     @Override
-    public void deleteIncident(java.util.UUID id) {
+    public void deleteIncident(UUID id) {
 
         Incident incident = incidentRepository.findById(id)
                 .orElseThrow(() -> new IncidentNotFoundException(

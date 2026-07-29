@@ -1,26 +1,21 @@
 package com.aiplatform.sentinel.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
 import com.aiplatform.sentinel.entity.Incident;
 import com.aiplatform.sentinel.enums.Severity;
 
-public class IncidentMapper {
+@Mapper(componentModel = "spring")
+public interface IncidentMapper {
 
-    private IncidentMapper() {
-    }
+    IncidentResponse toResponse(Incident incident);
 
-    public static IncidentResponse toResponse(Incident incident) {
-
-        IncidentResponse response = new IncidentResponse();
-
-        response.setId(incident.getId());
-        response.setTitle(incident.getTitle());
-        response.setDescription(incident.getDescription());
-        response.setSeverity(incident.getSeverity());
-        response.setStatus(incident.getStatus());
-        response.setCreatedAt(incident.getCreatedAt());
-        response.setUpdatedAt(incident.getUpdatedAt());
-
-        return response;
-    }
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    Incident toEntity(CreateIncidentRequest request);
 }
