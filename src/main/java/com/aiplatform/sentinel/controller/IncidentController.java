@@ -1,11 +1,14 @@
 package com.aiplatform.sentinel.controller;
 
+import com.aiplatform.sentinel.common.ApiResponse;
+import com.aiplatform.sentinel.common.ApiResponseBuilder;
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
 import com.aiplatform.sentinel.service.IncidentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,30 +22,45 @@ public class IncidentController {
     private final IncidentService incidentService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public IncidentResponse createIncident(
+    public ResponseEntity<ApiResponse<IncidentResponse>> createIncident(
             @Valid @RequestBody CreateIncidentRequest request) {
 
-        return incidentService.createIncident(request);
+        IncidentResponse response = incidentService.createIncident(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseBuilder.success(
+                        "Incident created successfully",
+                        response));
     }
 
     @GetMapping
-    public List<IncidentResponse> getAllIncidents() {
-        return incidentService.getAllIncidents();
+    public ResponseEntity<ApiResponse<List<IncidentResponse>>> getAllIncidents() {
+
+        return ResponseEntity.ok(
+                ApiResponseBuilder.success(
+                        "Incidents fetched successfully",
+                        incidentService.getAllIncidents()));
     }
 
     @GetMapping("/{id}")
-    public IncidentResponse getIncident(
+    public ResponseEntity<ApiResponse<IncidentResponse>> getIncident(
             @PathVariable UUID id) {
 
-        return incidentService.getIncident(id);
+        return ResponseEntity.ok(
+                ApiResponseBuilder.success(
+                        "Incident fetched successfully",
+                        incidentService.getIncident(id)));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteIncident(
+    public ResponseEntity<ApiResponse<Void>> deleteIncident(
             @PathVariable UUID id) {
 
         incidentService.deleteIncident(id);
+
+        return ResponseEntity.ok(
+                ApiResponseBuilder.success(
+                        "Incident deleted successfully",
+                        null));
     }
 }
