@@ -5,6 +5,9 @@ import com.aiplatform.sentinel.common.ApiResponseBuilder;
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
 import com.aiplatform.sentinel.service.IncidentService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,51 +19,56 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/incidents")
+@Tag(name = "Incident API", description = "Operations related to Incident Management")
 @RequiredArgsConstructor
 public class IncidentController {
 
-    private final IncidentService incidentService;
+        private final IncidentService incidentService;
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<IncidentResponse>> createIncident(
-            @Valid @RequestBody CreateIncidentRequest request) {
+        @Operation(summary = "Create Incident", description = "Creates a new incident in the system.")
+        @PostMapping
+        public ResponseEntity<ApiResponse<IncidentResponse>> createIncident(
+                        @Valid @RequestBody CreateIncidentRequest request) {
 
-        IncidentResponse response = incidentService.createIncident(request);
+                IncidentResponse response = incidentService.createIncident(request);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponseBuilder.success(
-                        "Incident created successfully",
-                        response));
-    }
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(ApiResponseBuilder.success(
+                                                "Incident created successfully",
+                                                response));
+        }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<IncidentResponse>>> getAllIncidents() {
+        @Operation(summary = "Get All Incidents")
+        @GetMapping
+        public ResponseEntity<ApiResponse<List<IncidentResponse>>> getAllIncidents() {
 
-        return ResponseEntity.ok(
-                ApiResponseBuilder.success(
-                        "Incidents fetched successfully",
-                        incidentService.getAllIncidents()));
-    }
+                return ResponseEntity.ok(
+                                ApiResponseBuilder.success(
+                                                "Incidents fetched successfully",
+                                                incidentService.getAllIncidents()));
+        }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<IncidentResponse>> getIncident(
-            @PathVariable UUID id) {
+        @Operation(summary = "Get Incident By Id")
+        @GetMapping("/{id}")
+        public ResponseEntity<ApiResponse<IncidentResponse>> getIncident(
+                        @PathVariable UUID id) {
 
-        return ResponseEntity.ok(
-                ApiResponseBuilder.success(
-                        "Incident fetched successfully",
-                        incidentService.getIncident(id)));
-    }
+                return ResponseEntity.ok(
+                                ApiResponseBuilder.success(
+                                                "Incident fetched successfully",
+                                                incidentService.getIncident(id)));
+        }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteIncident(
-            @PathVariable UUID id) {
+        @Operation(summary = "Delete Incident")
+        @DeleteMapping("/{id}")
+        public ResponseEntity<ApiResponse<Void>> deleteIncident(
+                        @PathVariable UUID id) {
 
-        incidentService.deleteIncident(id);
+                incidentService.deleteIncident(id);
 
-        return ResponseEntity.ok(
-                ApiResponseBuilder.success(
-                        "Incident deleted successfully",
-                        null));
-    }
+                return ResponseEntity.ok(
+                                ApiResponseBuilder.success(
+                                                "Incident deleted successfully",
+                                                null));
+        }
 }
