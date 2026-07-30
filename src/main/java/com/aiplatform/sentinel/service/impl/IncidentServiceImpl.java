@@ -30,7 +30,7 @@ public class IncidentServiceImpl implements IncidentService {
 
         incident.setStatus(Status.OPEN);
 
-        Incident saved = incidentRepository.save(incident);
+        Incident saved = incidentRepository.saveAndFlush(incident);
 
         return incidentMapper.toResponse(saved);
     }
