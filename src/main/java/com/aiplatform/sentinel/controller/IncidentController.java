@@ -3,6 +3,7 @@ package com.aiplatform.sentinel.controller;
 import com.aiplatform.sentinel.common.ApiResponse;
 import com.aiplatform.sentinel.common.ApiResponseBuilder;
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
+import com.aiplatform.sentinel.dto.request.UpdateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
 import com.aiplatform.sentinel.service.IncidentService;
 
@@ -70,5 +71,16 @@ public class IncidentController {
                                 ApiResponseBuilder.success(
                                                 "Incident deleted successfully",
                                                 null));
+        }
+
+        @PatchMapping("/{id}")
+        @ResponseStatus(HttpStatus.OK)
+        public ApiResponse<IncidentResponse> updateIncident(
+                        @PathVariable UUID id,
+                        @Valid @RequestBody UpdateIncidentRequest request) {
+
+                IncidentResponse response = incidentService.updateIncident(id, request);
+
+                return ApiResponse.success("Incident updated successfully", response);
         }
 }

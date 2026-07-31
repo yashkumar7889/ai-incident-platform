@@ -2,11 +2,12 @@ package com.aiplatform.sentinel.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
+import com.aiplatform.sentinel.dto.request.UpdateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
 import com.aiplatform.sentinel.entity.Incident;
-import com.aiplatform.sentinel.enums.Severity;
 
 @Mapper(componentModel = "spring")
 public interface IncidentMapper {
@@ -18,4 +19,6 @@ public interface IncidentMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Incident toEntity(CreateIncidentRequest request);
+
+    void updateIncidentFromRequest(UpdateIncidentRequest request, @MappingTarget Incident incident);
 }

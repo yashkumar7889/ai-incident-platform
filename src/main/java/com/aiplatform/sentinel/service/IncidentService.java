@@ -1,6 +1,7 @@
 package com.aiplatform.sentinel.service;
 
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
+import com.aiplatform.sentinel.dto.request.UpdateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
 
 import java.util.List;
@@ -15,4 +16,6 @@ public interface IncidentService {
     IncidentResponse getIncident(UUID id);
 
     void deleteIncident(UUID id);
+
+    IncidentResponse updateIncident(UUID id, UpdateIncidentRequest request);
 }

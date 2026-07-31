@@ -1,6 +1,7 @@
 package com.aiplatform.sentinel.service.impl;
 
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
+import com.aiplatform.sentinel.dto.request.UpdateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
 import com.aiplatform.sentinel.entity.Incident;
 import com.aiplatform.sentinel.enums.Status;
@@ -64,5 +65,16 @@ public class IncidentServiceImpl implements IncidentService {
                         "Incident not found with id : " + id));
 
         incidentRepository.delete(incident);
+    }
+
+    @Override
+    public IncidentResponse updateIncident(UUID id, UpdateIncidentRequest request) {
+
+        Incident incident = incidentRepository.findById(id)
+                .orElseThrow(() -> new IncidentNotFoundException("Incident not found with id: " + id));
+
+        incidentMapper.updateIncidentFromRequest(request, incident);
+        Incident updatedIncident = incidentRepository.saveAndFlush(incident);
+        return incidentMapper.toResponse(updatedIncident);
     }
 }
