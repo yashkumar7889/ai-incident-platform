@@ -17,6 +17,7 @@ public interface IncidentService {
     PageResponse<IncidentResponse> getIncidents(
             Severity severity,
             Status status,
+            String keyword,
             int page,
             int size,
             String sortBy,

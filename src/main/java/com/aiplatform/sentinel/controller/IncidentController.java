@@ -48,6 +48,7 @@ public class IncidentController {
         public ApiResponse<PageResponse<IncidentResponse>> getIncidents(
                         @RequestParam(required = false) Severity severity,
                         @RequestParam(required = false) Status status,
+                        @RequestParam(required = false) String keyword,
                         @RequestParam(required = false) Integer page,
                         @RequestParam(required = false) Integer size,
                         @RequestParam(required = false) String sortBy,
@@ -58,6 +59,7 @@ public class IncidentController {
                                 incidentService.getIncidents(
                                                 severity,
                                                 status,
+                                                keyword,
                                                 page != null ? page : paginationProperties.getDefaultPage(),
                                                 size != null ? size : paginationProperties.getDefaultSize(),
                                                 sortBy != null ? sortBy : paginationProperties.getDefaultSortBy(),

@@ -11,12 +11,15 @@ import com.aiplatform.sentinel.exception.IncidentNotFoundException;
 import com.aiplatform.sentinel.mapper.IncidentMapper;
 import com.aiplatform.sentinel.repository.IncidentRepository;
 import com.aiplatform.sentinel.service.IncidentService;
+import com.aiplatform.sentinel.specification.IncidentSpecification;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,6 +51,7 @@ public class IncidentServiceImpl implements IncidentService {
     public PageResponse<IncidentResponse> getIncidents(
             Severity severity,
             Status status,
+            String keyword,
             int page,
             int size,
             String sortBy,
@@ -59,31 +63,14 @@ public class IncidentServiceImpl implements IncidentService {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<Incident> incidents;
+        Specification<Incident> specification = Specification
+                .where(IncidentSpecification.hasSeverity(severity))
+                .and(IncidentSpecification.hasStatus(status))
+                .and(IncidentSpecification.hasKeyword(keyword));
 
-        if (severity != null && status != null) {
-            incidents = incidentRepository.findBySeverityAndStatus(severity, status, pageable);
-        } else if (severity != null) {
-            incidents = incidentRepository.findBySeverity(severity, pageable);
-        } else if (status != null) {
-            incidents = incidentRepository.findByStatus(status, pageable);
-        } else {
-            incidents = incidentRepository.findAll(pageable);
-        }
+        Page<Incident> incidents = incidentRepository.findAll(specification, pageable);
 
-        List<IncidentResponse> responses = incidents.getContent()
-                .stream()
-                .map(incidentMapper::toResponse)
-                .toList();
-
-        return new PageResponse<>(
-                responses,
-                incidents.getNumber(),
-                incidents.getSize(),
-                incidents.getTotalElements(),
-                incidents.getTotalPages(),
-                incidents.isFirst(),
-                incidents.isLast());
+        return buildPageResponse(incidents);
     }
 
     @Override
@@ -116,5 +103,26 @@ public class IncidentServiceImpl implements IncidentService {
         incidentMapper.updateIncidentFromRequest(request, incident);
         Incident updatedIncident = incidentRepository.saveAndFlush(incident);
         return incidentMapper.toResponse(updatedIncident);
+    }
+
+    private boolean hasKeyword(String keyword) {
+        return keyword != null && !keyword.isBlank();
+    }
+
+    private PageResponse<IncidentResponse> buildPageResponse(Page<Incident> incidents) {
+
+        List<IncidentResponse> responses = incidents.getContent()
+                .stream()
+                .map(incidentMapper::toResponse)
+                .toList();
+
+        return new PageResponse<>(
+                responses,
+                incidents.getNumber(),
+                incidents.getSize(),
+                incidents.getTotalElements(),
+                incidents.getTotalPages(),
+                incidents.isFirst(),
+                incidents.isLast());
     }
 }
