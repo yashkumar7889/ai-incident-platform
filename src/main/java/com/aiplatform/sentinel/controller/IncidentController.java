@@ -5,6 +5,8 @@ import com.aiplatform.sentinel.common.ApiResponseBuilder;
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
 import com.aiplatform.sentinel.dto.request.UpdateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
+import com.aiplatform.sentinel.enums.Severity;
+import com.aiplatform.sentinel.enums.Status;
 import com.aiplatform.sentinel.service.IncidentService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,14 +41,16 @@ public class IncidentController {
                                                 response));
         }
 
-        @Operation(summary = "Get All Incidents")
         @GetMapping
-        public ResponseEntity<ApiResponse<List<IncidentResponse>>> getAllIncidents() {
+        public ApiResponse<List<IncidentResponse>> getIncidents(
+                        @RequestParam(required = false) Severity severity,
+                        @RequestParam(required = false) Status status) {
 
-                return ResponseEntity.ok(
-                                ApiResponseBuilder.success(
-                                                "Incidents fetched successfully",
-                                                incidentService.getAllIncidents()));
+                List<IncidentResponse> incidents = incidentService.getIncidents(severity, status);
+
+                return ApiResponse.success(
+                                "Incidents fetched successfully",
+                                incidents);
         }
 
         @Operation(summary = "Get Incident By Id")

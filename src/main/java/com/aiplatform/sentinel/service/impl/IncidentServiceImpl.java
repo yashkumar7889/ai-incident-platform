@@ -4,6 +4,7 @@ import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
 import com.aiplatform.sentinel.dto.request.UpdateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
 import com.aiplatform.sentinel.entity.Incident;
+import com.aiplatform.sentinel.enums.Severity;
 import com.aiplatform.sentinel.enums.Status;
 import com.aiplatform.sentinel.exception.IncidentNotFoundException;
 import com.aiplatform.sentinel.mapper.IncidentMapper;
@@ -38,10 +39,23 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<IncidentResponse> getAllIncidents() {
+    public List<IncidentResponse> getIncidents(
+            Severity severity,
+            Status status) {
 
-        return incidentRepository.findAll()
-                .stream()
+        List<Incident> incidents;
+
+        if (severity != null && status != null) {
+            incidents = incidentRepository.findBySeverityAndStatus(severity, status);
+        } else if (severity != null) {
+            incidents = incidentRepository.findBySeverity(severity);
+        } else if (status != null) {
+            incidents = incidentRepository.findByStatus(status);
+        } else {
+            incidents = incidentRepository.findAll();
+        }
+
+        return incidents.stream()
                 .map(incidentMapper::toResponse)
                 .toList();
     }
