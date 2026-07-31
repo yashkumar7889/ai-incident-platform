@@ -19,5 +19,11 @@ spring:
 
   flyway:
     enabled: true
-
     locations: classpath:db/migration
+
+app:
+  pagination:
+    default-page: 0
+    default-size: 10
+    default-sort-by: createdAt
+    default-sort-dir: desc

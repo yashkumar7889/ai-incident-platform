@@ -1,5 +1,6 @@
 package com.aiplatform.sentinel.service.impl;
 
+import com.aiplatform.sentinel.common.PageResponse;
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
 import com.aiplatform.sentinel.dto.request.UpdateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
@@ -11,6 +12,11 @@ import com.aiplatform.sentinel.mapper.IncidentMapper;
 import com.aiplatform.sentinel.repository.IncidentRepository;
 import com.aiplatform.sentinel.service.IncidentService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,25 +45,45 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<IncidentResponse> getIncidents(
+    public PageResponse<IncidentResponse> getIncidents(
             Severity severity,
-            Status status) {
+            Status status,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir) {
 
-        List<Incident> incidents;
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Incident> incidents;
 
         if (severity != null && status != null) {
-            incidents = incidentRepository.findBySeverityAndStatus(severity, status);
+            incidents = incidentRepository.findBySeverityAndStatus(severity, status, pageable);
         } else if (severity != null) {
-            incidents = incidentRepository.findBySeverity(severity);
+            incidents = incidentRepository.findBySeverity(severity, pageable);
         } else if (status != null) {
-            incidents = incidentRepository.findByStatus(status);
+            incidents = incidentRepository.findByStatus(status, pageable);
         } else {
-            incidents = incidentRepository.findAll();
+            incidents = incidentRepository.findAll(pageable);
         }
 
-        return incidents.stream()
+        List<IncidentResponse> responses = incidents.getContent()
+                .stream()
                 .map(incidentMapper::toResponse)
                 .toList();
+
+        return new PageResponse<>(
+                responses,
+                incidents.getNumber(),
+                incidents.getSize(),
+                incidents.getTotalElements(),
+                incidents.getTotalPages(),
+                incidents.isFirst(),
+                incidents.isLast());
     }
 
     @Override

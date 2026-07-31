@@ -1,5 +1,7 @@
 package com.aiplatform.sentinel.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,9 +15,9 @@ import com.aiplatform.sentinel.enums.Status;
 @Repository
 public interface IncidentRepository extends JpaRepository<Incident, UUID> {
 
-        List<Incident> findByStatus(Status status);
+        Page<Incident> findByStatus(Status status, Pageable pageable);
 
-        List<Incident> findBySeverity(Severity severity);
+        Page<Incident> findBySeverity(Severity severity, Pageable pageable);
 
-        List<Incident> findBySeverityAndStatus(Severity severity, Status status);
+        Page<Incident> findBySeverityAndStatus(Severity severity, Status status, Pageable pageable);
 }

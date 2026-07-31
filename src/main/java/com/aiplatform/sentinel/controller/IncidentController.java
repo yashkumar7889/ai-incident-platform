@@ -2,6 +2,8 @@ package com.aiplatform.sentinel.controller;
 
 import com.aiplatform.sentinel.common.ApiResponse;
 import com.aiplatform.sentinel.common.ApiResponseBuilder;
+import com.aiplatform.sentinel.common.PageResponse;
+import com.aiplatform.sentinel.config.PaginationProperties;
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
 import com.aiplatform.sentinel.dto.request.UpdateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
@@ -27,6 +29,7 @@ import java.util.UUID;
 public class IncidentController {
 
         private final IncidentService incidentService;
+        private final PaginationProperties paginationProperties;
 
         @Operation(summary = "Create Incident", description = "Creates a new incident in the system.")
         @PostMapping
@@ -42,15 +45,23 @@ public class IncidentController {
         }
 
         @GetMapping
-        public ApiResponse<List<IncidentResponse>> getIncidents(
+        public ApiResponse<PageResponse<IncidentResponse>> getIncidents(
                         @RequestParam(required = false) Severity severity,
-                        @RequestParam(required = false) Status status) {
-
-                List<IncidentResponse> incidents = incidentService.getIncidents(severity, status);
+                        @RequestParam(required = false) Status status,
+                        @RequestParam(required = false) Integer page,
+                        @RequestParam(required = false) Integer size,
+                        @RequestParam(required = false) String sortBy,
+                        @RequestParam(required = false) String sortDir) {
 
                 return ApiResponse.success(
                                 "Incidents fetched successfully",
-                                incidents);
+                                incidentService.getIncidents(
+                                                severity,
+                                                status,
+                                                page != null ? page : paginationProperties.getDefaultPage(),
+                                                size != null ? size : paginationProperties.getDefaultSize(),
+                                                sortBy != null ? sortBy : paginationProperties.getDefaultSortBy(),
+                                                sortDir != null ? sortDir : paginationProperties.getDefaultSortDir()));
         }
 
         @Operation(summary = "Get Incident By Id")

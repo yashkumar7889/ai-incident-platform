@@ -1,5 +1,6 @@
 package com.aiplatform.sentinel.service;
 
+import com.aiplatform.sentinel.common.PageResponse;
 import com.aiplatform.sentinel.dto.request.CreateIncidentRequest;
 import com.aiplatform.sentinel.dto.request.UpdateIncidentRequest;
 import com.aiplatform.sentinel.dto.response.IncidentResponse;
@@ -13,7 +14,13 @@ public interface IncidentService {
 
     IncidentResponse createIncident(CreateIncidentRequest request);
 
-    List<IncidentResponse> getIncidents(Severity severity, Status status);
+    PageResponse<IncidentResponse> getIncidents(
+            Severity severity,
+            Status status,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir);
 
     IncidentResponse getIncident(UUID id);
 
