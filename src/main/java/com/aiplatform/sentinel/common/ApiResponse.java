@@ -42,4 +42,15 @@ public class ApiResponse<T> {
                 null,
                 LocalDateTime.now());
     }
+
+    public static <T> ApiResponse<T> failure(
+            String message,
+            T data) {
+
+        return new ApiResponse<>(
+                false,
+                message,
+                data,
+                LocalDateTime.now());
+    }
 }
