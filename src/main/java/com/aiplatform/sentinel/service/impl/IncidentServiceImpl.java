@@ -64,7 +64,7 @@ public class IncidentServiceImpl implements IncidentService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Specification<Incident> specification = Specification
-                .where(IncidentSpecification.hasSeverity(severity))
+                .allOf(IncidentSpecification.hasSeverity(severity))
                 .and(IncidentSpecification.hasStatus(status))
                 .and(IncidentSpecification.hasKeyword(keyword));
 
