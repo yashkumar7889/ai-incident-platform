@@ -30,6 +30,13 @@ spring:
           model: qwen2.5:0.5b
           temperature: 0.3
 
+      embedding:
+        model: nomic-embed-text
+
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+
 app:
   pagination:
     default-page: 0
