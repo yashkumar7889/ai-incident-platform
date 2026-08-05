@@ -1,11 +1,13 @@
 package com.aiplatform.sentinel.controller;
 
 import com.aiplatform.sentinel.dto.request.AiPromptRequest;
+import com.aiplatform.sentinel.dto.request.AskQuestionRequest;
 import com.aiplatform.sentinel.dto.request.IncidentSummaryRequest;
 import com.aiplatform.sentinel.dto.request.ResolutionRequest;
 import com.aiplatform.sentinel.dto.request.RootCauseRequest;
 import com.aiplatform.sentinel.dto.request.SeverityPredictionRequest;
 import com.aiplatform.sentinel.dto.response.AiResponse;
+import com.aiplatform.sentinel.dto.response.AskQuestionResponse;
 import com.aiplatform.sentinel.dto.response.IncidentSummaryResponse;
 import com.aiplatform.sentinel.dto.response.ResolutionResponse;
 import com.aiplatform.sentinel.dto.response.RootCauseResponse;
@@ -104,6 +106,18 @@ public class AiController {
 
         return ApiResponse.success(
                 "Resolution generated successfully",
+                response);
+    }
+
+    @PostMapping("/ask")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<AskQuestionResponse> askQuestion(
+            @Valid @RequestBody AskQuestionRequest request) {
+
+        AskQuestionResponse response = aiService.askQuestion(request.getQuestion());
+
+        return ApiResponse.success(
+                "Answer generated successfully",
                 response);
     }
 }

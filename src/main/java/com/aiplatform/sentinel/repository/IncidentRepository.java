@@ -49,4 +49,6 @@ public interface IncidentRepository extends
                         Status statusAgain,
                         String description,
                         Pageable pageable);
+
+        List<Incident> findTop5ByOrderByCreatedAtDesc();
 }
