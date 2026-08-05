@@ -1,7 +1,9 @@
 package com.aiplatform.sentinel.controller;
 
 import com.aiplatform.sentinel.dto.request.AiPromptRequest;
+import com.aiplatform.sentinel.dto.request.IncidentSummaryRequest;
 import com.aiplatform.sentinel.dto.response.AiResponse;
+import com.aiplatform.sentinel.dto.response.IncidentSummaryResponse;
 import com.aiplatform.sentinel.common.ApiResponse;
 import com.aiplatform.sentinel.service.AiService;
 
@@ -26,5 +28,16 @@ public class AiController {
         return ApiResponse.success(
                 "AI response generated successfully",
                 new AiResponse(response));
+    }
+
+    @PostMapping("/summarize")
+    public ApiResponse<IncidentSummaryResponse> summarizeIncident(
+            @Valid @RequestBody IncidentSummaryRequest request) {
+
+        String summary = aiService.summarizeIncident(request.getDescription());
+
+        return ApiResponse.success(
+                "Incident summarized successfully",
+                new IncidentSummaryResponse(summary));
     }
 }

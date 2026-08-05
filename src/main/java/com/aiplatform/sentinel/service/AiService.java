@@ -4,4 +4,6 @@ public interface AiService {
 
     String chat(String prompt);
 
+    String summarizeIncident(String description);
+
 }

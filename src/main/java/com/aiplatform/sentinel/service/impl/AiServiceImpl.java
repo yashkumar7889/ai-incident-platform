@@ -22,4 +22,22 @@ public class AiServiceImpl implements AiService {
                 .call()
                 .content();
     }
+
+    @Override
+    public String summarizeIncident(String description) {
+
+        String prompt = """
+                You are an experienced Site Reliability Engineer.
+
+                Summarize the following incident in one concise sentence.
+
+                Incident:
+                %s
+                """.formatted(description);
+
+        return chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
+    }
 }
