@@ -3,6 +3,7 @@ package com.aiplatform.sentinel.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.ai.chat.client.ChatClient;
 
+import com.aiplatform.sentinel.dto.response.RootCauseResponse;
 import com.aiplatform.sentinel.dto.response.SeverityPredictionResponse;
 import com.aiplatform.sentinel.service.AiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -102,5 +103,51 @@ public class AiServiceImpl implements AiService {
                 .replace("```json", "")
                 .replace("```", "")
                 .trim();
+    }
+
+    @Override
+    public RootCauseResponse analyzeRootCause(String description) {
+
+        String prompt = """
+                You are an experienced Site Reliability Engineer.
+
+                Analyze the following production incident.
+
+                Identify the SINGLE most probable technical root cause.
+
+                Respond ONLY with valid JSON.
+
+                Do NOT use markdown.
+                Do NOT explain outside the JSON.
+
+                The probableCause should be a concise but descriptive technical explanation (1–2 sentences).
+
+                Expected format:
+
+                {
+                  "probableCause": "..."
+                }
+
+                Incident:
+                %s
+                """.formatted(description);
+
+        String response = chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
+
+        response = cleanJson(response);
+
+        try {
+            return objectMapper.readValue(
+                    response,
+                    RootCauseResponse.class);
+
+        } catch (Exception ex) {
+            throw new RuntimeException(
+                    "Failed to parse AI response: " + response,
+                    ex);
+        }
     }
 }
