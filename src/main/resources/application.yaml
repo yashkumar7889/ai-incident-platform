@@ -21,6 +21,15 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+
+      chat:
+        options:
+          model: qwen2.5:0.5b
+          temperature: 0.3
+
 app:
   pagination:
     default-page: 0
