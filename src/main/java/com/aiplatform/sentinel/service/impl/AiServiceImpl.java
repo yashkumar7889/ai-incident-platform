@@ -3,15 +3,19 @@ package com.aiplatform.sentinel.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.ai.chat.client.ChatClient;
 
+import com.aiplatform.sentinel.dto.response.SeverityPredictionResponse;
 import com.aiplatform.sentinel.service.AiService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class AiServiceImpl implements AiService {
 
     private final ChatClient chatClient;
+    private final ObjectMapper objectMapper;
 
-    public AiServiceImpl(ChatClient.Builder chatClientBuilder) {
+    public AiServiceImpl(ChatClient.Builder chatClientBuilder, ObjectMapper objectMapper) {
         this.chatClient = chatClientBuilder.build();
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -39,5 +43,64 @@ public class AiServiceImpl implements AiService {
                 .user(prompt)
                 .call()
                 .content();
+    }
+
+    @Override
+    public SeverityPredictionResponse predictSeverity(String description) {
+
+        String prompt = """
+                You are an experienced Site Reliability Engineer.
+
+                Analyze the following incident.
+
+                Classify the severity using ONLY one of these values:
+                LOW
+                MEDIUM
+                HIGH
+                CRITICAL
+
+                Return ONLY valid JSON.
+
+                Do NOT wrap the JSON in markdown.
+                Do NOT use ```json.
+                Do NOT explain your answer.
+
+                Expected format:
+
+                {
+                  "severity": "...",
+                  "reason": "..."
+                }
+
+                Incident:
+                %s
+                """.formatted(description);
+
+        String response = chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
+
+        System.out.println("Raw AI Response:\n" + response);
+
+        try {
+            response = cleanJson(response);
+
+            return objectMapper.readValue(
+                    response,
+                    SeverityPredictionResponse.class);
+
+        } catch (Exception ex) {
+            throw new RuntimeException(
+                    "Failed to parse AI response: " + response, ex);
+        }
+    }
+
+    private String cleanJson(String response) {
+
+        return response
+                .replace("```json", "")
+                .replace("```", "")
+                .trim();
     }
 }

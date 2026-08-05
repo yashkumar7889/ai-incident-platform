@@ -2,15 +2,25 @@ package com.aiplatform.sentinel.controller;
 
 import com.aiplatform.sentinel.dto.request.AiPromptRequest;
 import com.aiplatform.sentinel.dto.request.IncidentSummaryRequest;
+import com.aiplatform.sentinel.dto.request.SeverityPredictionRequest;
 import com.aiplatform.sentinel.dto.response.AiResponse;
 import com.aiplatform.sentinel.dto.response.IncidentSummaryResponse;
+import com.aiplatform.sentinel.dto.response.SeverityPredictionResponse;
 import com.aiplatform.sentinel.common.ApiResponse;
 import com.aiplatform.sentinel.service.AiService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/ai")
@@ -39,5 +49,23 @@ public class AiController {
         return ApiResponse.success(
                 "Incident summarized successfully",
                 new IncidentSummaryResponse(summary));
+    }
+
+    @Operation(summary = "Predict Incident Severity")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Severity predicted successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+    })
+    @PostMapping("/severity")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<SeverityPredictionResponse> predictSeverity(
+            @Valid @RequestBody SeverityPredictionRequest request) {
+
+        SeverityPredictionResponse response = aiService.predictSeverity(
+                request.getDescription());
+
+        return ApiResponse.success(
+                "Severity predicted successfully",
+                response);
     }
 }
