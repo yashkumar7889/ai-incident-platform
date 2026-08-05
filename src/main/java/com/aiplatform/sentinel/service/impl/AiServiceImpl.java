@@ -3,6 +3,7 @@ package com.aiplatform.sentinel.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.ai.chat.client.ChatClient;
 
+import com.aiplatform.sentinel.dto.response.ResolutionResponse;
 import com.aiplatform.sentinel.dto.response.RootCauseResponse;
 import com.aiplatform.sentinel.dto.response.SeverityPredictionResponse;
 import com.aiplatform.sentinel.service.AiService;
@@ -143,6 +144,51 @@ public class AiServiceImpl implements AiService {
             return objectMapper.readValue(
                     response,
                     RootCauseResponse.class);
+
+        } catch (Exception ex) {
+            throw new RuntimeException(
+                    "Failed to parse AI response: " + response,
+                    ex);
+        }
+    }
+
+    public ResolutionResponse recommendResolution(String description) {
+
+        String prompt = """
+                You are an experienced Site Reliability Engineer.
+
+                Analyze the following incident.
+
+                Suggest the most appropriate resolution steps.
+
+                Return ONLY valid JSON.
+
+                Do NOT wrap the JSON in markdown.
+                Do NOT explain outside the JSON.
+
+                The resolution should be concise (2-4 actionable steps).
+
+                Expected format:
+
+                {
+                  "resolution": "..."
+                }
+
+                Incident:
+                %s
+                """.formatted(description);
+
+        String response = chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
+
+        response = cleanJson(response);
+
+        try {
+            return objectMapper.readValue(
+                    response,
+                    ResolutionResponse.class);
 
         } catch (Exception ex) {
             throw new RuntimeException(

@@ -1,5 +1,6 @@
 package com.aiplatform.sentinel.service;
 
+import com.aiplatform.sentinel.dto.response.ResolutionResponse;
 import com.aiplatform.sentinel.dto.response.RootCauseResponse;
 import com.aiplatform.sentinel.dto.response.SeverityPredictionResponse;
 
@@ -12,5 +13,7 @@ public interface AiService {
     SeverityPredictionResponse predictSeverity(String description);
 
     RootCauseResponse analyzeRootCause(String description);
+
+    ResolutionResponse recommendResolution(String description);
 
 }
