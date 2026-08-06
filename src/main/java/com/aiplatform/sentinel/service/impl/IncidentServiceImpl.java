@@ -10,6 +10,7 @@ import com.aiplatform.sentinel.enums.Status;
 import com.aiplatform.sentinel.exception.IncidentNotFoundException;
 import com.aiplatform.sentinel.mapper.IncidentMapper;
 import com.aiplatform.sentinel.repository.IncidentRepository;
+import com.aiplatform.sentinel.service.EmbeddingService;
 import com.aiplatform.sentinel.service.IncidentService;
 import com.aiplatform.sentinel.specification.IncidentSpecification;
 
@@ -33,6 +34,7 @@ public class IncidentServiceImpl implements IncidentService {
 
     private final IncidentRepository incidentRepository;
     private final IncidentMapper incidentMapper;
+    private final EmbeddingService embeddingService;
 
     @Override
     public IncidentResponse createIncident(CreateIncidentRequest request) {
@@ -42,6 +44,8 @@ public class IncidentServiceImpl implements IncidentService {
         incident.setStatus(Status.OPEN);
 
         Incident saved = incidentRepository.saveAndFlush(incident);
+
+        embeddingService.indexIncident(saved);
 
         return incidentMapper.toResponse(saved);
     }
