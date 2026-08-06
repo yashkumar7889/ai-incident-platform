@@ -32,282 +32,291 @@ import com.aiplatform.sentinel.service.impl.IncidentServiceImpl;
 @ExtendWith(MockitoExtension.class)
 class IncidentServiceImplTest {
 
-    @Mock
-    private IncidentRepository incidentRepository;
+        @Mock
+        private IncidentRepository incidentRepository;
 
-    @Mock
-    private IncidentMapper incidentMapper;
+        @Mock
+        private IncidentMapper incidentMapper;
 
-    @InjectMocks
-    private IncidentServiceImpl incidentService;
+        @InjectMocks
+        private IncidentServiceImpl incidentService;
 
-    @Test
-    void shouldCreateIncidentSuccessfully() {
+        @Mock
+        private EmbeddingService embeddingService;
 
-        CreateIncidentRequest request = new CreateIncidentRequest();
-        request.setTitle("Database Down");
-        request.setDescription("Cannot connect");
-        request.setSeverity(Severity.HIGH);
+        @Test
+        void shouldCreateIncidentSuccessfully() {
 
-        Incident incident = new Incident();
-        incident.setTitle(request.getTitle());
-        incident.setDescription(request.getDescription());
-        incident.setSeverity(request.getSeverity());
+                CreateIncidentRequest request = new CreateIncidentRequest();
+                request.setTitle("Database Down");
+                request.setDescription("Cannot connect");
+                request.setSeverity(Severity.HIGH);
 
-        Incident saved = new Incident();
-        saved.setId(UUID.randomUUID());
-        saved.setTitle(request.getTitle());
-        saved.setDescription(request.getDescription());
-        saved.setSeverity(request.getSeverity());
-        saved.setStatus(Status.OPEN);
+                Incident incident = new Incident();
+                incident.setTitle(request.getTitle());
+                incident.setDescription(request.getDescription());
+                incident.setSeverity(request.getSeverity());
 
-        IncidentResponse response = new IncidentResponse();
-        response.setId(saved.getId());
-        response.setTitle(saved.getTitle());
-        response.setStatus(saved.getStatus());
+                Incident saved = new Incident();
+                saved.setId(UUID.randomUUID());
+                saved.setTitle(request.getTitle());
+                saved.setDescription(request.getDescription());
+                saved.setSeverity(request.getSeverity());
+                saved.setStatus(Status.OPEN);
 
-        when(incidentMapper.toEntity(request)).thenReturn(incident);
-        when(incidentRepository.saveAndFlush(any(Incident.class))).thenReturn(saved);
-        when(incidentMapper.toResponse(saved)).thenReturn(response);
+                IncidentResponse response = new IncidentResponse();
+                response.setId(saved.getId());
+                response.setTitle(saved.getTitle());
+                response.setStatus(saved.getStatus());
 
-        IncidentResponse result = incidentService.createIncident(request);
+                when(incidentMapper.toEntity(request)).thenReturn(incident);
+                when(incidentRepository.saveAndFlush(any(Incident.class))).thenReturn(saved);
+                when(incidentMapper.toResponse(saved)).thenReturn(response);
+                doNothing().when(embeddingService).indexIncident(any(Incident.class));
 
-        assertNotNull(result);
-        assertEquals(Status.OPEN, result.getStatus());
+                IncidentResponse result = incidentService.createIncident(request);
 
-        ArgumentCaptor<Incident> captor = ArgumentCaptor.forClass(Incident.class);
+                assertNotNull(result);
+                assertEquals(Status.OPEN, result.getStatus());
 
-        verify(incidentRepository).saveAndFlush(captor.capture());
+                ArgumentCaptor<Incident> captor = ArgumentCaptor.forClass(Incident.class);
 
-        Incident captured = captor.getValue();
+                verify(incidentRepository).saveAndFlush(captor.capture());
+                verify(embeddingService).indexIncident(saved);
 
-        assertEquals(Status.OPEN, captured.getStatus());
+                Incident captured = captor.getValue();
 
-        verify(incidentMapper).toEntity(request);
-        verify(incidentMapper).toResponse(saved);
-    }
+                assertEquals(Status.OPEN, captured.getStatus());
 
-    @Test
-    void shouldGetIncidentByIdSuccessfully() {
+                verify(incidentMapper).toEntity(request);
+                verify(incidentMapper).toResponse(saved);
+        }
 
-        // Arrange
-        UUID id = UUID.randomUUID();
+        @Test
+        void shouldGetIncidentByIdSuccessfully() {
 
-        Incident incident = new Incident();
-        incident.setId(id);
-        incident.setTitle("Database Down");
-        incident.setStatus(Status.OPEN);
+                // Arrange
+                UUID id = UUID.randomUUID();
 
-        IncidentResponse response = new IncidentResponse();
-        response.setId(id);
-        response.setTitle("Database Down");
-        response.setStatus(Status.OPEN);
+                Incident incident = new Incident();
+                incident.setId(id);
+                incident.setTitle("Database Down");
+                incident.setStatus(Status.OPEN);
 
-        when(incidentRepository.findById(id))
-                .thenReturn(Optional.of(incident));
+                IncidentResponse response = new IncidentResponse();
+                response.setId(id);
+                response.setTitle("Database Down");
+                response.setStatus(Status.OPEN);
 
-        when(incidentMapper.toResponse(incident))
-                .thenReturn(response);
+                when(incidentRepository.findById(id))
+                                .thenReturn(Optional.of(incident));
 
-        // Act
-        IncidentResponse result = incidentService.getIncident(id);
+                when(incidentMapper.toResponse(incident))
+                                .thenReturn(response);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(id, result.getId());
-        assertEquals("Database Down", result.getTitle());
+                // Act
+                IncidentResponse result = incidentService.getIncident(id);
 
-        verify(incidentRepository).findById(id);
-        verify(incidentMapper).toResponse(incident);
-    }
+                // Assert
+                assertNotNull(result);
+                assertEquals(id, result.getId());
+                assertEquals("Database Down", result.getTitle());
 
-    @Test
-    void shouldThrowExceptionWhenIncidentNotFound() {
+                verify(incidentRepository).findById(id);
+                verify(incidentMapper).toResponse(incident);
+        }
 
-        // Arrange
-        UUID id = UUID.randomUUID();
+        @Test
+        void shouldThrowExceptionWhenIncidentNotFound() {
 
-        when(incidentRepository.findById(id))
-                .thenReturn(Optional.empty());
+                // Arrange
+                UUID id = UUID.randomUUID();
 
-        // Act & Assert
-        IncidentNotFoundException exception = assertThrows(
-                IncidentNotFoundException.class,
-                () -> incidentService.getIncident(id));
+                when(incidentRepository.findById(id))
+                                .thenReturn(Optional.empty());
 
-        assertEquals(
-                "Incident not found with id : " + id,
-                exception.getMessage());
+                // Act & Assert
+                IncidentNotFoundException exception = assertThrows(
+                                IncidentNotFoundException.class,
+                                () -> incidentService.getIncident(id));
 
-        verify(incidentRepository).findById(id);
-        verifyNoInteractions(incidentMapper);
-    }
+                assertEquals(
+                                "Incident not found with id : " + id,
+                                exception.getMessage());
 
-    @Test
-    void shouldUpdateIncidentSuccessfully() {
+                verify(incidentRepository).findById(id);
+                verifyNoInteractions(incidentMapper);
+        }
 
-        // Arrange
-        UUID id = UUID.randomUUID();
+        @Test
+        void shouldUpdateIncidentSuccessfully() {
 
-        UpdateIncidentRequest request = new UpdateIncidentRequest();
-        request.setTitle("Updated Database Down");
-        request.setDescription("Updated Description");
-        request.setSeverity(Severity.CRITICAL);
-        request.setStatus(Status.IN_PROGRESS);
+                // Arrange
+                UUID id = UUID.randomUUID();
 
-        Incident incident = new Incident();
-        incident.setId(id);
-        incident.setTitle("Database Down");
-        incident.setDescription("Old Description");
-        incident.setSeverity(Severity.HIGH);
-        incident.setStatus(Status.OPEN);
+                UpdateIncidentRequest request = new UpdateIncidentRequest();
+                request.setTitle("Updated Database Down");
+                request.setDescription("Updated Description");
+                request.setSeverity(Severity.CRITICAL);
+                request.setStatus(Status.IN_PROGRESS);
 
-        IncidentResponse response = new IncidentResponse();
-        response.setId(id);
-        response.setTitle(request.getTitle());
-        response.setDescription(request.getDescription());
-        response.setSeverity(request.getSeverity());
-        response.setStatus(request.getStatus());
+                Incident incident = new Incident();
+                incident.setId(id);
+                incident.setTitle("Database Down");
+                incident.setDescription("Old Description");
+                incident.setSeverity(Severity.HIGH);
+                incident.setStatus(Status.OPEN);
 
-        when(incidentRepository.findById(id))
-                .thenReturn(Optional.of(incident));
+                IncidentResponse response = new IncidentResponse();
+                response.setId(id);
+                response.setTitle(request.getTitle());
+                response.setDescription(request.getDescription());
+                response.setSeverity(request.getSeverity());
+                response.setStatus(request.getStatus());
 
-        when(incidentRepository.saveAndFlush(any(Incident.class)))
-                .thenReturn(incident);
+                when(incidentRepository.findById(id))
+                                .thenReturn(Optional.of(incident));
 
-        when(incidentMapper.toResponse(incident))
-                .thenReturn(response);
+                when(incidentRepository.saveAndFlush(any(Incident.class)))
+                                .thenReturn(incident);
 
-        // Act
-        IncidentResponse result = incidentService.updateIncident(id, request);
+                when(incidentMapper.toResponse(incident))
+                                .thenReturn(response);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(id, result.getId());
-        assertEquals(Status.IN_PROGRESS, result.getStatus());
-        assertEquals("Updated Database Down", result.getTitle());
+                doNothing().when(embeddingService).updateIncidentEmbedding(any(Incident.class));
 
-        verify(incidentRepository).findById(id);
-        verify(incidentMapper).updateIncidentFromRequest(request, incident);
-        verify(incidentRepository).saveAndFlush(incident);
-        verify(incidentMapper).toResponse(incident);
-    }
+                // Act
+                IncidentResponse result = incidentService.updateIncident(id, request);
 
-    @Test
-    void shouldThrowExceptionWhenUpdatingNonExistingIncident() {
+                // Assert
+                assertNotNull(result);
+                assertEquals(id, result.getId());
+                assertEquals(Status.IN_PROGRESS, result.getStatus());
+                assertEquals("Updated Database Down", result.getTitle());
 
-        UUID id = UUID.randomUUID();
+                verify(incidentRepository).findById(id);
+                verify(incidentMapper).updateIncidentFromRequest(request, incident);
+                verify(incidentRepository).saveAndFlush(incident);
+                verify(embeddingService).updateIncidentEmbedding(incident);
+                verify(incidentMapper).toResponse(incident);
+        }
 
-        UpdateIncidentRequest request = new UpdateIncidentRequest();
+        @Test
+        void shouldThrowExceptionWhenUpdatingNonExistingIncident() {
 
-        when(incidentRepository.findById(id))
-                .thenReturn(Optional.empty());
+                UUID id = UUID.randomUUID();
 
-        IncidentNotFoundException exception = assertThrows(
-                IncidentNotFoundException.class,
-                () -> incidentService.updateIncident(id, request));
+                UpdateIncidentRequest request = new UpdateIncidentRequest();
 
-        assertEquals(
-                "Incident not found with id: " + id,
-                exception.getMessage());
+                when(incidentRepository.findById(id))
+                                .thenReturn(Optional.empty());
 
-        verify(incidentRepository).findById(id);
-        verifyNoMoreInteractions(incidentRepository);
-        verifyNoInteractions(incidentMapper);
-    }
+                IncidentNotFoundException exception = assertThrows(
+                                IncidentNotFoundException.class,
+                                () -> incidentService.updateIncident(id, request));
 
-    @Test
-    void shouldDeleteIncidentSuccessfully() {
+                assertEquals(
+                                "Incident not found with id: " + id,
+                                exception.getMessage());
 
-        // Arrange
-        UUID id = UUID.randomUUID();
+                verify(incidentRepository).findById(id);
+                verifyNoMoreInteractions(incidentRepository);
+                verifyNoInteractions(incidentMapper);
+        }
 
-        Incident incident = new Incident();
-        incident.setId(id);
+        @Test
+        void shouldDeleteIncidentSuccessfully() {
 
-        when(incidentRepository.findById(id))
-                .thenReturn(Optional.of(incident));
+                // Arrange
+                UUID id = UUID.randomUUID();
 
-        // Act
-        incidentService.deleteIncident(id);
+                Incident incident = new Incident();
+                incident.setId(id);
 
-        // Assert
-        verify(incidentRepository).findById(id);
-        verify(incidentRepository).delete(incident);
-    }
+                when(incidentRepository.findById(id)).thenReturn(Optional.of(incident));
+                doNothing().when(embeddingService).deleteIncidentEmbedding(any(UUID.class));
 
-    @Test
-    void shouldThrowExceptionWhenDeletingNonExistingIncident() {
+                // Act
+                incidentService.deleteIncident(id);
 
-        // Arrange
-        UUID id = UUID.randomUUID();
+                // Assert
+                verify(incidentRepository).findById(id);
+                verify(incidentRepository).delete(incident);
+                verify(embeddingService).deleteIncidentEmbedding(id);
+        }
 
-        when(incidentRepository.findById(id))
-                .thenReturn(Optional.empty());
+        @Test
+        void shouldThrowExceptionWhenDeletingNonExistingIncident() {
 
-        // Act & Assert
-        IncidentNotFoundException exception = assertThrows(
-                IncidentNotFoundException.class,
-                () -> incidentService.deleteIncident(id));
+                // Arrange
+                UUID id = UUID.randomUUID();
 
-        assertEquals(
-                "Incident not found with id : " + id,
-                exception.getMessage());
+                when(incidentRepository.findById(id))
+                                .thenReturn(Optional.empty());
 
-        verify(incidentRepository).findById(id);
-        verify(incidentRepository, never()).delete(any(Incident.class));
-    }
+                // Act & Assert
+                IncidentNotFoundException exception = assertThrows(
+                                IncidentNotFoundException.class,
+                                () -> incidentService.deleteIncident(id));
 
-    @Test
-    void shouldGetIncidentsSuccessfully() {
+                assertEquals(
+                                "Incident not found with id : " + id,
+                                exception.getMessage());
 
-        Incident incident = new Incident();
-        incident.setId(UUID.randomUUID());
-        incident.setTitle("Database Down");
+                verify(incidentRepository).findById(id);
+                verify(incidentRepository, never()).delete(any(Incident.class));
+        }
 
-        IncidentResponse response = new IncidentResponse();
-        response.setId(incident.getId());
+        @Test
+        void shouldGetIncidentsSuccessfully() {
 
-        Page<Incident> page = new PageImpl<>(
-                List.of(incident),
-                PageRequest.of(0, 10),
-                1);
+                Incident incident = new Incident();
+                incident.setId(UUID.randomUUID());
+                incident.setTitle("Database Down");
 
-        when(incidentRepository.findAll(
-                any(Specification.class),
-                any(Pageable.class)))
-                .thenReturn(page);
+                IncidentResponse response = new IncidentResponse();
+                response.setId(incident.getId());
 
-        when(incidentMapper.toResponse(incident))
-                .thenReturn(response);
+                Page<Incident> page = new PageImpl<>(
+                                List.of(incident),
+                                PageRequest.of(0, 10),
+                                1);
 
-        PageResponse<IncidentResponse> result = incidentService.getIncidents(
-                null,
-                null,
-                null,
-                0,
-                10,
-                "createdAt",
-                "desc");
+                when(incidentRepository.findAll(
+                                any(Specification.class),
+                                any(Pageable.class)))
+                                .thenReturn(page);
 
-        assertNotNull(result);
-        assertEquals(1, result.getContent().size());
+                when(incidentMapper.toResponse(incident))
+                                .thenReturn(response);
 
-        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+                PageResponse<IncidentResponse> result = incidentService.getIncidents(
+                                null,
+                                null,
+                                null,
+                                0,
+                                10,
+                                "createdAt",
+                                "desc");
 
-        verify(incidentRepository)
-                .findAll(any(Specification.class),
-                        pageableCaptor.capture());
+                assertNotNull(result);
+                assertEquals(1, result.getContent().size());
 
-        Pageable pageable = pageableCaptor.getValue();
+                ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
-        assertEquals(0, pageable.getPageNumber());
-        assertEquals(10, pageable.getPageSize());
+                verify(incidentRepository)
+                                .findAll(any(Specification.class),
+                                                pageableCaptor.capture());
 
-        Sort.Order order = pageable.getSort().getOrderFor("createdAt");
+                Pageable pageable = pageableCaptor.getValue();
 
-        assertNotNull(order);
-        assertEquals(Sort.Direction.DESC, order.getDirection());
-    }
+                assertEquals(0, pageable.getPageNumber());
+                assertEquals(10, pageable.getPageSize());
+
+                Sort.Order order = pageable.getSort().getOrderFor("createdAt");
+
+                assertNotNull(order);
+                assertEquals(Sort.Direction.DESC, order.getDirection());
+        }
 
 }
