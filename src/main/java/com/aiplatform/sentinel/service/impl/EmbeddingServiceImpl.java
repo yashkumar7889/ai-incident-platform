@@ -22,12 +22,14 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     @Override
     public void indexIncident(Incident incident) {
 
-        Document document = new Document(incident.getDescription());
-
-        document.getMetadata().put("incidentId", incident.getId().toString());
-        document.getMetadata().put("title", incident.getTitle());
-        document.getMetadata().put("severity", incident.getSeverity().name());
-        document.getMetadata().put("status", incident.getStatus().name());
+        Document document = Document.builder()
+                .id(incident.getId().toString())
+                .text(incident.getDescription())
+                .metadata("incidentId", incident.getId().toString())
+                .metadata("title", incident.getTitle())
+                .metadata("severity", incident.getSeverity().name())
+                .metadata("status", incident.getStatus().name())
+                .build();
 
         vectorStore.add(List.of(document));
     }
@@ -36,5 +38,19 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     public List<Document> searchSimilarIncidents(String query) {
 
         return vectorStore.similaritySearch(query);
+    }
+
+    @Override
+    public void updateIncidentEmbedding(Incident incident) {
+
+        deleteIncidentEmbedding(incident.getId());
+
+        indexIncident(incident);
+    }   
+
+    @Override
+    public void deleteIncidentEmbedding(UUID incidentId) {
+
+        vectorStore.delete(List.of(incidentId.toString()));
     }
 }

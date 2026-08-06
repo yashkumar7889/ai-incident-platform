@@ -95,6 +95,7 @@ public class IncidentServiceImpl implements IncidentService {
                 .orElseThrow(() -> new IncidentNotFoundException(
                         "Incident not found with id : " + id));
 
+        embeddingService.deleteIncidentEmbedding(id);
         incidentRepository.delete(incident);
     }
 
@@ -106,6 +107,7 @@ public class IncidentServiceImpl implements IncidentService {
 
         incidentMapper.updateIncidentFromRequest(request, incident);
         Incident updatedIncident = incidentRepository.saveAndFlush(incident);
+        embeddingService.updateIncidentEmbedding(updatedIncident);
         return incidentMapper.toResponse(updatedIncident);
     }
 
